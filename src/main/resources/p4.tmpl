@@ -82,7 +82,7 @@ struct intrinsic_metadata_t {
     bit<8> resubmit_flag;
     bit<8> recirculate_flag;
 }
-    
+
 struct CommonMetadata {
     bit<32> switchId;
     bit<32> payload_length;
@@ -109,7 +109,7 @@ struct Metadata {
     @name("intrinsic_metadata")
     intrinsic_metadata_t intrinsic_metadata;
     @name("queueing_metadata")
-    queueing_metadata_t queueing_metadata; 
+    queueing_metadata_t queueing_metadata;
 }
 
 parser P(packet_in b,
@@ -150,6 +150,8 @@ control Ing(inout Headers headers,
             inout Metadata meta,
             inout standard_metadata_t standard_meta) {
 
+    IPv4Address nextHop; // local variable
+
     /**
      * Indicates that a packet is dropped by setting the
      * output port to the DROP_PORT
@@ -163,8 +165,7 @@ control Ing(inout Headers headers,
      * @param ivp4_dest ipv4 address of next hop
      * @param port output port
      */
-    action Set_nhop(out IPv4Address nextHop,
-                    IPv4Address ipv4_dest,
+    action Set_nhop(IPv4Address ipv4_dest,
                     bit<9> outPort) {
         nextHop = ipv4_dest;
         standard_meta.egress_spec = outPort;
@@ -176,11 +177,11 @@ control Ing(inout Headers headers,
      * Decrements packet Ipv4 TTL.
      * @param nextHop Ipv4 address of next hop
      */
-    table ipv4_match(out IPv4Address nextHop) {
+    table ipv4_match {
         key = { headers.ip.dstAddr : lpm; }
         actions = {
             Drop_action;
-            Set_nhop(nextHop);
+            Set_nhop();
         }
 
         size = 1024;
@@ -200,13 +201,13 @@ control Ing(inout Headers headers,
     action Set_dmac(EthernetAddress dmac) {
         headers.ethernet.dstAddr = dmac;
     }
-    
+
     /**
      * Set the destination Ethernet address of the packet
      * based on the next hop IP address.
      * @param nextHop Ipv4 address of next hop.
      */
-    table dmac(in IPv4Address nextHop) {
+    table dmac {
        key = { nextHop : exact; }
        actions = {
             Drop_action;
@@ -226,7 +227,7 @@ control Ing(inout Headers headers,
       /**
        * Set the source mac address based on the output port.
        */
-      table smac() {
+      table smac {
            key = { standard_meta.egress_port : exact; }
            actions = {
                 Drop_action;
@@ -237,9 +238,8 @@ control Ing(inout Headers headers,
       }
 
     apply {
-        IPv4Address nextHop;
-        ipv4_match.apply(nextHop); // Match result will go into nextHop
-        dmac.apply(nextHop);
+        ipv4_match.apply(); // Match result will go into nextHop
+        dmac.apply();
         smac.apply();
     }
 }
@@ -275,11 +275,11 @@ control DP(packet_out b, in Headers p) {
 }
 
 // Fillers
-control Verify(in Headers hdrs, inout Metadata meta) {
+control Verify(inout Headers hdrs, inout Metadata meta) {
     apply {}
 }
 
-control Compute(inout Headers hdr, inout Metadata meta) {
+control Compute(inout Headers hdrs, inout Metadata meta) {
     apply {}
 }
 
