@@ -12,7 +12,7 @@ public class PipeConstructor {
   private HashSet<String> visited;
   private HashMap<String, ArrayList<String>> schema;
   private HashSet<String> predPacketFields;
-  
+
   public PipeConstructor(HashMap<String, PipeStage> stages,
                          HashMap<String, Operation> depTable,
                          String lastAssignedId) {
@@ -58,6 +58,7 @@ public class PipeConstructor {
         schemaFields.addAll(inputFieldSet);
         return new ArrayList<>(schemaFields);
       case GROUPBY:
+      case FLOWRAD:
         return new ArrayList<String>(setFields);
       case PKTLOG:
         return Fields.fields;
@@ -108,6 +109,7 @@ public class PipeConstructor {
       case PROJECT:
       case JOIN:
       case GROUPBY:
+      case FLOWRAD:
         ps.getConfigInfo().addValidStmt(queryId,
                                         operandQueryId,
                                         operandQueryId.equals(pktLogStr));

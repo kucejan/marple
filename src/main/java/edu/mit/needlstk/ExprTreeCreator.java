@@ -66,6 +66,9 @@ public class ExprTreeCreator extends PerfQueryBaseListener {
     } else if (op instanceof PerfQueryParser.GroupbyContext) {
       PerfQueryParser.GroupbyContext groupby = (PerfQueryParser.GroupbyContext)op;
       return new Operation(OperationType.GROUPBY, Utility.getAllTokens(groupby.stream(), idTtype));
+    } else if (op instanceof PerfQueryParser.FlowradContext) {
+      PerfQueryParser.FlowradContext flowrad = (PerfQueryParser.FlowradContext)op;
+      return new Operation(OperationType.FLOWRAD, Utility.getAllTokens(flowrad.stream(), idTtype));
     } else if (op instanceof PerfQueryParser.MapContext) {
       PerfQueryParser.MapContext map = (PerfQueryParser.MapContext)op;
       return new Operation(OperationType.PROJECT, Utility.getAllTokens(map.stream(), idTtype));

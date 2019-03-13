@@ -32,7 +32,7 @@ public class ConfigGen extends PerfQueryBaseVisitor<PipeStage> {
     queryToPipe.put(query, result);
     return result;
   }
-  
+
   @Override public PipeStage visitFilter(PerfQueryParser.FilterContext ctx) {
     FilterConfigInfo fci = new FilterConfigInfo(ctx.predicate());
     return new PipeStage(OperationType.FILTER, fci);
@@ -52,6 +52,17 @@ public class ConfigGen extends PerfQueryBaseVisitor<PipeStage> {
                                             stateVars.get(aggFun),
                                             fieldVars.get(aggFun));
     return new PipeStage(OperationType.GROUPBY, fci);
+  }
+
+    @Override public PipeStage visitFlowrad(PerfQueryParser.FlowradContext ctx) {
+    String aggFun = ctx.aggFunc().getText();
+    FoldConfigInfo fci = new FoldConfigInfo(ctx.columnList(),
+                                            aggFun,
+                                            aggFunCode.get(aggFun),
+                                            aggFunSymTab.get(aggFun),
+                                            stateVars.get(aggFun),
+                                            fieldVars.get(aggFun));
+    return new PipeStage(OperationType.FLOWRAD, fci);
   }
 
   @Override public PipeStage visitZip(PerfQueryParser.ZipContext ctx) {

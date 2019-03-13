@@ -15,10 +15,10 @@ import java.util.Collections;
 public class GlobalAnalyzer extends PerfQueryBaseVisitor<LocatedExprTree> {
   /// A reference to the set of switches globally in the network
   private HashSet<Integer> allSwitches;
- 
+
   /// A reference to the symbol to query parse tree from previous passes.
   private HashMap<String, ParserRuleContext> symTree;
-  
+
   /// A reference to the last assigned ID in the query program.
   private String lastAssignedId;
 
@@ -39,7 +39,7 @@ public class GlobalAnalyzer extends PerfQueryBaseVisitor<LocatedExprTree> {
     this.lastAssignedId = lastAssignedId;
     this.aggFunAssocMap = aggFunAssocMap;
   }
-  
+
   /// Return OpLocation from underlying operators, which are inputs to the current operator.
   private LocatedExprTree recurseDeps(String stream) {
     /// Recursively get OpLocation information for the operand streams.
@@ -87,11 +87,11 @@ public class GlobalAnalyzer extends PerfQueryBaseVisitor<LocatedExprTree> {
     LocatedExprTree letInput = recurseDeps(ctx.stream().getText());
     OpLocation oplOutput = letInput.opl();
     return new LocatedExprTree(OperationType.PROJECT,
-                               oplOutput, 
+                               oplOutput,
                                new ArrayList<>(Collections.singletonList(letInput)));
   }
 
-  /// Helper function for folds, TODO: Document what it does. 
+  /// Helper function for folds, TODO: Document what it does.
   private LocatedExprTree foldHelper(String streamName,
                                      PerfQueryParser.ColumnListContext ctx,
                                      String queryText,
@@ -120,13 +120,19 @@ public class GlobalAnalyzer extends PerfQueryBaseVisitor<LocatedExprTree> {
                                new ArrayList<>(Collections.singletonList(letInput)));
   }
 
-  /// visit groupbys, i.e., r = groupby(s, field_list, aggregation function) 
+  /// visit groupbys, i.e., r = groupby(s, field_list, aggregation function)
   @Override public LocatedExprTree visitGroupby(PerfQueryParser.GroupbyContext ctx) {
     return foldHelper(ctx.stream().getText(), ctx.columnList(), ctx.getText(),
                       OperationType.GROUPBY, ctx.aggFunc().getText());
   }
 
-  /// visit zips, i.e., r = zip(s1, s2) 
+  /// visit flowrads, i.e., r = flowrad(s, field_list, aggregation function)
+  @Override public LocatedExprTree visitFlowrad(PerfQueryParser.FlowradContext ctx) {
+    return foldHelper(ctx.stream().getText(), ctx.columnList(), ctx.getText(),
+                      OperationType.FLOWRAD, ctx.aggFunc().getText());
+  }
+
+  /// visit zips, i.e., r = zip(s1, s2)
   @Override public LocatedExprTree visitZip(PerfQueryParser.ZipContext ctx) {
     unsetTopLevel();
     LocatedExprTree letFirst  = recurseDeps(ctx.stream(0).getText());
@@ -145,7 +151,7 @@ public class GlobalAnalyzer extends PerfQueryBaseVisitor<LocatedExprTree> {
                                children);
   }
 
-  /// visit the top level program 
+  /// visit the top level program
   @Override public LocatedExprTree visitProg(PerfQueryParser.ProgContext ctx) {
     ParserRuleContext subquery = symTree.get(lastAssignedId);
     assert (subquery != null);

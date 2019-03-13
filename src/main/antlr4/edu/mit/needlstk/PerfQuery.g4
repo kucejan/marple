@@ -7,6 +7,7 @@ WS : [ \n\t\r]+ -> channel(HIDDEN);
 FILTER   : 'filter';
 MAP      : 'map';
 GROUPBY  : 'groupby';
+FLOWRAD  : 'flowrad';
 ZIP      : 'zip';
 IF       : 'if';
 THEN     : 'then';
@@ -94,12 +95,13 @@ aggFun: DEF ASSOC? aggFunc '(' stateList ',' columnList ')' ':' codeBlock;
 filter    :  FILTER '(' stream ',' predicate ')';
 map       :  MAP '(' stream ',' columnList ',' exprList ')';
 groupby   :  GROUPBY '(' stream ',' columnList ',' aggFunc ')';
+flowrad   :  FLOWRAD '(' stream ',' columnList ',' aggFunc ')';
 zip       :  ZIP '(' stream ',' stream ')';
 // Note: The semantics of a GROUPBY are that we return all columns in the GROUPBY field
 // as well as all state maintained as part of the aggregation function.
 
 // The two types of queries
-streamQuery : filter | map | groupby | zip;
+streamQuery : filter | map | groupby | flowrad | zip;
 
 // Single statements in the language
 streamStmt : stream '=' streamQuery ';';

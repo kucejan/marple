@@ -34,7 +34,7 @@ public class PipeStage {
     res += this.fields.toString();
     res += "\n";
     res += this.op.toString();
-    if (this.op == OperationType.GROUPBY) {
+    if (this.op == OperationType.GROUPBY || this.op == OperationType.FLOWRAD) {
       res += " ";
       res += ((FoldConfigInfo)this.configInfo).getKeyFields().toString();
       res += "\n";
@@ -50,38 +50,45 @@ public class PipeStage {
   }
 
   public String getAction() {
-    if (this.op != OperationType.GROUPBY) {
-      return "action " + this.pipeName + "() {\n" + configInfo.getP4() + "\n}";
+    if (this.op == OperationType.GROUPBY || this.op == OperationType.FLOWRAD) {
+      try {
+        InputStream is;
+        if (this.op == OperationType.FLOWRAD) {
+          is = CodeFragmentPrinter.class.getClassLoader().getResourceAsStream("flowrad.tmpl");
+        } else {
+          is = CodeFragmentPrinter.class.getClassLoader().getResourceAsStream("groupby.tmpl");
+        }
+
+        ST groupby_template = new ST(IOUtils.toString(is, "UTF-8"), '$', '$');
+        groupby_template.add("KeyFields", this.getQualifiedKeyFields());
+        groupby_template.add("ValueFields", this.getValueFields());
+        groupby_template.add("StageName", this.pipeName);
+        groupby_template.add("TableSize", 1024); // TODO: Unhardcode this.
+        groupby_template.add("UpdateCode", configInfo.getP4());
+
+        return groupby_template.render();
+      } catch (Exception e) {
+        e.printStackTrace();
+        System.exit(1);
+        return "";
+      }
     } else {
-     try {
-      InputStream is = CodeFragmentPrinter.class.getClassLoader().getResourceAsStream("groupby.tmpl");
-      ST groupby_template = new ST(IOUtils.toString(is, "UTF-8"), '$', '$');
-      groupby_template.add("KeyFields", this.getQualifiedKeyFields());
-      groupby_template.add("ValueFields", this.getValueFields());
-      groupby_template.add("StageName", this.pipeName);
-      groupby_template.add("TableSize", 1024); // TODO: Unhardcode this.
-      groupby_template.add("UpdateCode", configInfo.getP4());
-      return groupby_template.render();
-     } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(1);
-      return "";
-     }
+      return "action " + this.pipeName + "() {\n" + configInfo.getP4() + "\n}";
     }
   }
 
   public String getAction_call() {
-    if (this.op != OperationType.GROUPBY) {
-      return this.pipeName + "();\n";
-    } else {
+    if (this.op == OperationType.GROUPBY || this.op == OperationType.FLOWRAD) {
       return  "Key_" + this.pipeName + "  evictedKey_" + this.pipeName + ";\n"
             + "Value_" + this.pipeName + " evictedValue_" + this.pipeName + ";\n"
             + this.pipeName + "(evictedKey_" + this.pipeName + "," +  "evictedValue_" + this.pipeName + ");\n";
+    } else {
+      return this.pipeName + "();\n";
     }
   }
 
   public List<String> getQualifiedKeyFields() {
-    assert(this.op == OperationType.GROUPBY);
+    assert(this.op == OperationType.GROUPBY || this.op == OperationType.FLOWRAD);
     FoldConfigInfo fci = (FoldConfigInfo)this.configInfo;
     return fci.getKeyFields().stream().
           map(var -> P4Printer.p4Ident(var, AggFunVarType.FIELD)).
@@ -89,7 +96,7 @@ public class PipeStage {
   }
 
   public List<String> getValueFields() {
-    assert(this.op == OperationType.GROUPBY);
+    assert(this.op == OperationType.GROUPBY || this.op == OperationType.FLOWRAD);
     FoldConfigInfo fci = (FoldConfigInfo)this.configInfo;
     return fci.getStateArgs().stream().collect(Collectors.toList());
   }

@@ -39,7 +39,7 @@ public class CodeFragmentPrinter {
 
       List<GroupbyStruct> groupby_structs = new ArrayList<GroupbyStruct>();// groupby structs
       for (PipeStage stage: pipe) {
-        if (stage.getOp() == OperationType.GROUPBY) {
+        if (stage.getOp() == OperationType.GROUPBY || stage.getOp() == OperationType.FLOWRAD) {
           groupby_structs.add(new GroupbyStruct("Key_"+stage.getPipeName(), stage.getQualifiedKeyFields()));
           groupby_structs.add(new GroupbyStruct("Value_"+stage.getPipeName(), stage.getValueFields()));
         }

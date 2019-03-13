@@ -38,7 +38,7 @@ action $StageName$(inout Key_$StageName$ evictedKey, inout Value_$StageName$ evi
     // Template hole: Check if there is a match in the hash table (inKey matches against a stored key)
     bool key_matches = true;
     $KeyFields : { field | key_matches = (existingKey_f$i0$ == inKey.f$i0$) ? key_matches : false;$\n$}$
- 
+
     // Template hole: There is no eviction if either existingKey == inKey or existingKey == 0.
     bool ok = key_matches || no_key_present;
     $KeyFields   : { field | evictedKey.f$i0$   = !ok ? existingKey_f$i0$     : 0;$\n$}$
@@ -46,7 +46,7 @@ action $StageName$(inout Key_$StageName$ evictedKey, inout Value_$StageName$ evi
 
     // Template hole: Get value if there is no eviction, pass this on to update code
     $ValueFields : { field | bit<32> _val_$field$ = ok ? existingValue_f$i0$  : 0;$\n$}$
- 
+
     // Template hole: Execute code that updates value registers.
     // The code should reference values by their _val_* variable names directly.
     $UpdateCode$

@@ -53,6 +53,8 @@ class Utility {
     } else if (op instanceof PerfQueryParser.GroupbyContext) {
       // SELECT aggFunc FROM stream SGROUPBY ...
       return OperationType.GROUPBY;
+    } else if (op instanceof PerfQueryParser.FlowradContext) {
+      return OperationType.FLOWRAD;
     } else if (op instanceof PerfQueryParser.MapContext) {
       // SELECT exprList FROM stream
       return OperationType.PROJECT;
